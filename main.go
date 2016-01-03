@@ -32,8 +32,8 @@ func walkPoFiles(root string, walkFn filepath.WalkFunc) error {
 	return filepath.Walk(root, myWalkFn)
 }
 
-func buildMsgIdToFilePathMaps(root string) (map[string]string, error) {
-	maps := make(map[string]string)
+func buildMsgIdToFilePathMaps(root string) (map[string][]string, error) {
+	maps := make(map[string][]string)
 	walkFn := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -44,7 +44,13 @@ func buildMsgIdToFilePathMaps(root string) (map[string]string, error) {
 		}
 
 		for _, msg := range poFile.Messages {
-			maps[msg.MsgId] = path
+			paths := maps[msg.MsgId]
+			if paths == nil {
+				paths = []string{path}
+			} else {
+				paths = append(paths, path)
+			}
+			maps[msg.MsgId] = paths
 		}
 
 		return nil
@@ -94,12 +100,14 @@ func cpCommand(args []string) error {
 
 		for _, msg := range poFile.Messages {
 			if msg.MsgStr != "" {
-				destPath, ok := msgIdToFilePathMaps[msg.MsgId]
+				destPaths, ok := msgIdToFilePathMaps[msg.MsgId]
 				if ok {
-					fmt.Printf("srcPath:%s\tdestPath:%s\tmsgId:%s\tmsgStr:%s\n", path, destPath, msg.MsgId, msg.MsgStr)
-					err := updatePoFileWithMessage(destPath, msg)
-					if err != nil {
-						return err
+					for _, destPath := range destPaths {
+						fmt.Printf("srcPath:%s\tdestPath:%s\tmsgId:%s\tmsgStr:%s\n", path, destPath, msg.MsgId, msg.MsgStr)
+						err := updatePoFileWithMessage(destPath, msg)
+						if err != nil {
+							return err
+						}
 					}
 				}
 			}
