@@ -9,9 +9,9 @@ It is useful to migrate translated-strings after po files are renamed or splited
 
 ### Copy non-empty translated-strings
 
-./gopo cp srcDir destDir
+gopo cp srcDir destDir
 
 
 ### Show orphans non-empty translated-strings
 
-./gopo orphans srcDir destDir
+gopo orphans srcDir destDir
